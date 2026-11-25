@@ -1,0 +1,8 @@
+ipykernel
+nbclient
+nbconvert
+numpy
+matplotlib
+PyMPDATA
+tqdm
+open-atmos-jupyter-utils==1.5.2
