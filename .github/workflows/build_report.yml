@@ -1,0 +1,93 @@
+name: Build simulation report
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    env:
+      MPLBACKEND: Agg
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          tinytex: true
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Create output directories
+        run: |
+          mkdir -p figs
+          mkdir -p results/animations
+          mkdir -p build
+
+      - name: Execute notebook
+        run: |
+          jupyter nbconvert \
+            --to notebook \
+            --execute ver4.ipynb \
+            --output ver4.executed.ipynb \
+            --output-dir build \
+            --ExecutePreprocessor.timeout=-1 \
+            --ExecutePreprocessor.cwd=.
+
+      - name: Check outputs
+        run: |
+          test -s figs/geometries.pdf
+          test -s figs/spatial.pdf
+          test -s figs/temporal.pdf
+          test -s figs/point_measurements.pdf
+
+          test -s results/animations/geometry_A.gif
+          test -s results/animations/geometry_B.gif
+          test -s results/animations/geometry_C.gif
+
+      - name: Save build information
+        run: |
+          {
+            echo "Commit: $GITHUB_SHA"
+            echo "Run ID: $GITHUB_RUN_ID"
+            echo "Execution date (UTC): $(date -u +'%Y-%m-%d %H:%M:%S')"
+            echo "Python: $(python --version)"
+            echo "PyMPDATA: $(python -c 'import importlib.metadata as m; print(m.version("PyMPDATA"))')"
+          } > build-info.txt
+
+      - name: Render PDF report
+        run: |
+          quarto render report.qmd --to pdf
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: polymer-cooling-report
+          path: |
+            report.pdf
+            build-info.txt
+            figs/*.pdf
+            results/animations/geometry_A.gif
+            results/animations/geometry_B.gif
+            results/animations/geometry_C.gif
+          if-no-files-found: error
+          retention-days: 90
