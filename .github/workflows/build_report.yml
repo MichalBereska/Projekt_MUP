@@ -47,8 +47,8 @@ jobs:
         run: |
           jupyter nbconvert \
             --to notebook \
-            --execute ver4.ipynb \
-            --output ver4.executed.ipynb \
+            --execute simulation.ipynb \
+            --output simulation.executed.ipynb \
             --output-dir build \
             --ExecutePreprocessor.timeout=-1 \
             --ExecutePreprocessor.cwd=.
@@ -60,9 +60,9 @@ jobs:
           test -s figs/temporal.pdf
           test -s figs/point_measurements.pdf
 
-          test -s results/animations/geometry_A.gif
-          test -s results/animations/geometry_B.gif
-          test -s results/animations/geometry_C.gif
+          test -s geometry_A.gif
+          test -s geometry_B.gif
+          test -s geometry_C.gif
 
       - name: Save build information
         run: |
@@ -86,8 +86,8 @@ jobs:
             report.pdf
             build-info.txt
             figs/*.pdf
-            results/animations/geometry_A.gif
-            results/animations/geometry_B.gif
-            results/animations/geometry_C.gif
+            geometry_A.gif
+            geometry_B.gif
+            geometry_C.gif
           if-no-files-found: error
           retention-days: 90
