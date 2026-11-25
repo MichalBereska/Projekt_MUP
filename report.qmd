@@ -1,0 +1,101 @@
+---
+title: "Badanie wpływu geometrii przekroju elementu na równomierność chłodzenia"
+author: "Michał Bereska"
+lang: pl-PL
+
+format:
+  pdf:
+    documentclass: scrartcl
+    papersize: a4
+    fontsize: 9pt
+    geometry:
+      - top=9mm
+      - bottom=9mm
+      - left=12mm
+      - right=12mm
+    fig-pos: 'H'
+    include-in-header:
+      - text: |
+          \usepackage{float}
+          \usepackage{microtype}
+          \usepackage{setspace}
+
+          \setstretch{0.96}
+          \setlength{\parskip}{2pt}
+          \setlength{\parindent}{0pt}
+
+          \setlength{\textfloatsep}{5pt}
+          \setlength{\floatsep}{4pt}
+          \setlength{\intextsep}{4pt}
+
+          \setlength{\abovecaptionskip}{3pt}
+          \setlength{\belowcaptionskip}{2pt}
+
+          \setlength{\abovedisplayskip}{3pt}
+          \setlength{\belowdisplayskip}{3pt}
+---
+
+## 1. Cel projektu i model matematyczny
+
+Celem projektu jest numeryczna analiza 
+procesu chłodzenia elementów wykonanych z tworzyw sztucznych metodami formowania wtryskowego 
+o różnych geometriach przekroju poprzecznego.
+
+Badany proces opisano za pomocą dwuwymiarowego równania dyfuzji cieplnej:
+$\frac{\partial T}{\partial t}= \alpha \nabla ^2 T,$
+gdzie $T$ oznacza temperaturę, a $\alpha$ jest dyfuzyjnością cieplną materiału, wyrażoną jako:
+$\alpha = \frac{k}{\rho c_p}$, gdzie $k$ oznacza przewodność cieplną, $\rho$ – gęstość materiału,
+a $c_p$ – jego ciepło właściwe. W symulacji przyjęto stałą wartość dyfuzyjności $\alpha=0.12\ \mathrm{mm^2/s}$.
+Początkową temperaturę polimeru przyjęto jako $T_0=240\ \^\circ\mathrm{C}$, natomiast temperaturę formy jako $T_m=50\ \^\circ\mathrm{C}$.
+
+Równanie rozwiązano z wykorzystaniem biblioteki PyMPDATA, traktując je jako szczególny przypadek równania adwekcji-dyfuzji 
+z zerowym polem prędkości. Temperaturę komórek znajdujących się poza maską geometryczną przywracano po każdym kroku czasowym 
+do wartości $T_m$, przybliżając w ten sposób oddziaływanie formy utrzymywanej w stałej temperaturze.
+
+
+
+## 2. Badanie zbieżności
+
+![Przebieg temperatury w trzech punktach pomiarowych dla różnych rozdzielczości siatki przestrzennej](figs/spatial.pdf){width=100%}
+
+Badanie zbieżności przestrzennej przeprowadzono dla rozdzielczości siatki $DX=DY=0.20, 0.10, 0.075, 0.05$ mm, 
+przy zachowaniu stałego kroku czasowego $DT=0.001$ s. Uzyskane przebiegi temperatury w analizowanych punktach wykazują 
+bardzo dużą zgodność. Niewielkie odchylenia występują dla najrzadszej siatki o rozdzielczości 0,20 mm, natomiast wyniki
+dla 0.10, 0.075 i 0.05 mm praktycznie się pokrywają. Wskazuje to na osiągnięcie praktycznej zbieżności przestrzennej przy 
+rozdzielczości 0.10 mm. Dalsze zagęszczanie siatki nie przynosi zauważalnej poprawy wyników, zwiększając jednocześnie koszt obliczeniowy.
+
+![Przebieg temperatury w trzech punktach pomiarowych dla różnych kroków czasowych](figs/temporal.pdf){width=100%}
+
+Badanie zbieżności czasowej przeprowadzono dla kroków $DT=0.008, 0.004, 0.002, 0.001$ s, 
+przy stałej rozdzielczości przestrzennej $DX=DY=0.10$ mm. Otrzymane przebiegi temperatury praktycznie całkowicie 
+się pokrywają, co wskazuje na niewielki wpływ dyskretyzacji czasowej w badanym zakresie. Zmniejszanie kroku czasowego 
+nie powoduje istotnych zmian rozwiązania, dlatego przyjęcie wartości DT=0.008 s uznano za wystarczające. Pozwala to 
+ograniczyć liczbę wykonywanych iteracji bez zauważalnej utraty dokładności w analizowanych punktach.
+
+
+
+## 3. Porównanie geometryczne
+
+![Analizowane geometrie przekrojów poprzecznych A, B i C z zaznaczonymi punktami pomiarowymi](figs/geometries.pdf){width=60% fig-align="center"}
+
+Na rysunku przedstawiono trzy analizowane geometrie przekroju poprzecznego. Wszystkie warianty posiadają środkowy obszar o grubości 4 mm i szerokości 10 mm.
+Geometria A charakteryzuje się stałą grubością 4 mm na całej długości i największym polem przekroju.
+W geometrii B obszary znajdujące się poza środkową częścią mają grubość 2.5 mm, a przejście pomiędzy różnymi grubościami jest skokowe. Przekrój ten posiada najmniejsze pole powierzchni.
+Geometria C charakteryzuje się płynnym przejściem od grubości 2.5 mm na końcach do 4 mm w części środkowej
+Na rysnkach zaznaczono 3 punkty popmiarowe dla których wyrysowano wykresu zależności temperatury od czasu. 
+Punkty mają współrzędną $y = 1.5\text{ mm}$ oraz $x \in \{5.0, 9.5, 15.0\}\text{ mm}$.
+
+
+![Zależność temetrtury od czasu dla punktów pomiarowych dla analizowanych geometrii](figs/point_measurements.pdf){width=100%}
+
+
+Dla grometrii A krzywe praktycznie się pokrywają, zatem tempratura ma w tych punktach podobną wartość przez cały czas chłodzenia, 
+Można przypuszczać, że między tymi punktami nie występują naprężenia powodowane przez różnice temperatur.
+
+W przypadku geometrii B rówżnice między krzywymi są dużo większe, szczególnie mocno odbiega krzywa przedstawiająca temperaturę punktu o $x = 15.0$ mm.
+Tak duże różnice temperatur mogą sprzyjać powstawaniu większych naprężeń cieplnych i nierównomiernych odkształceń, prowadzących potencjalnie do deformacji elementu.
+
+Dla geometri C krzywe dla punktów będących bliżej śro przekoju zachowują podobną wartość temperatury, jednak punkt o $x = 5.0$ mm wyraźnie od nich odbiega.
+Aby jednoznacznie określić czy w tym przypadku powstałe w skutek różnicy tempratur naprężenia zdeformują model koniczne są dalsze symulacje.
+
+Do sprawozdania dołączono także animacje przedstawiające proces chłodzenia badanych elementów.
